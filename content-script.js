@@ -5,7 +5,7 @@ let interval;
 let timerElement;
 const currentHost = window.location.host;
 
-const onStart = (request) => {
+const onStart = (request, sendResponse) => {
   timers = request.timers;
   if (!(currentHost in timers)) timers[currentHost] = 0;
 
@@ -17,10 +17,10 @@ const onStart = (request) => {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action !== "start") return;
-  onStart(request);
+  onStart(request, sendResponse);
 });
 
-const renderTimers = (timers) => {
+const renderTimers = () => {
   const timerContainer = document.getElementById("timer-content");
   timerContainer.innerHTML = "";
 
@@ -54,10 +54,10 @@ const updateTimer = () => {
   timerElement.innerText = formattedTime;
 };
 
-const startTimer = (timers) => {
+const startTimer = () => {
   if (!backgroundMessageReceived || !htmlInjectionFinshed) return;
   if (interval) clearInterval(interval);
-  renderTimers(timers);
+  renderTimers();
   interval = setInterval(updateTimer, 1000);
 };
 
@@ -67,7 +67,6 @@ const stopTimer = () => {
 };
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  console.log(request);
   if (request.action == "pause") stopTimer();
 });
 
