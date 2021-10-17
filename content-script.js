@@ -5,7 +5,7 @@ let interval;
 let timerElement;
 const currentHost = window.location.host;
 
-const onStart = () => {
+const onStart = (request) => {
   timers = request.timers;
   if (!(currentHost in timers)) timers[currentHost] = 0;
 
@@ -17,7 +17,7 @@ const onStart = () => {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action !== "start") return;
-  onStart();
+  onStart(request);
 });
 
 const renderTimers = (timers) => {

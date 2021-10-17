@@ -1,5 +1,3 @@
-import { pause, start, reset } from "./controls";
-
 // messages
 const sendStart = async ({ tabId, timers }) => {
   chrome.tabs.sendMessage(tabId, { timers, action: "start" }, (response) => {
