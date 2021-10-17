@@ -1,38 +1,39 @@
-let lastActivation = new Date();
+import { pause, start, reset } from "./controls";
 
-const onTabUpdated = async (tabId) => {
-  const timers = getUpdatedTimers(await getTimersData());
-  saveToStorage({ timers, lastActivation: Date.now() });
-  sendTimers(tabId);
-};
-
-chrome.tabs.onActivated.addListener(async function ({ tabId, windowId }) {
-  // check if paused
-  onTabUpdated(tabId);
-});
-
-chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
-  // check if paused
-  if (changeInfo.status === "complete") {
-    onTabUpdated(tabId);
-  }
-});
-
-const sendTimers = async (tabId) => {
-  const timers = (await getFromStorage("timers"))["timers"] ?? {};
+// messages
+const sendStart = async ({ tabId, timers }) => {
   chrome.tabs.sendMessage(tabId, { timers, action: "start" }, (response) => {
     if (!response?.host) return;
     saveToStorage({ activeTimer: response.host });
   });
 };
 
-const getTimersData = async () =>
-  await getFromStorage(["timers", "lastActivation", "activeTimer"]);
+const sendStop = async ({ tabId, timers }) => {
+  chrome.tabs.sendMessage(tabId, { timers, action: "stop" });
+};
+// end messages
+
+// utils
+const getFromStorage = (key) => {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(key, (result) => {
+      resolve(result);
+    });
+  });
+};
+
+const getCurrentTab = async () => {
+  const queryOptions = { active: true, currentWindow: true };
+  const [tab] = await chrome.tabs.query(queryOptions);
+  return tab;
+};
 
 const saveToStorage = async (data) => {
   chrome.storage.local.set(data);
 };
+// end utils
 
+// timer
 const getUpdatedTimers = ({
   lastActivation: lastActivationRaw,
   timers: timersRaw,
@@ -52,37 +53,26 @@ const getUpdatedTimers = ({
   return timers;
 };
 
-const getFromStorage = (key) => {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(key, (result) => {
-      resolve(result);
-    });
-  });
-};
+const getTimersData = async () =>
+  await getFromStorage(["timers", "lastActivation", "activeTimer"]);
+// end timer
 
-getCurrentTab = async () => {
-  const queryOptions = { active: true, currentWindow: true };
-  const [tab] = await chrome.tabs.query(queryOptions);
-  return tab;
-};
-
+//controls
 const start = async () => {
   const currentTab = await getCurrentTab();
-  const url = new URL(currentTab.url);
   saveToStorage({
     lastActivation: Date.now(),
-    activeTimer: url.host,
+    paused: false,
   });
-  sendTimers(currentTab.id);
-  saveToStorage({ paused: false });
+  const { timers } = await getTimersData();
+  sendStart({ tabId: currentTab.id, timers });
 };
 
 const pause = async () => {
   const timers = getUpdatedTimers(await getTimersData());
 
-  const message = { action: "pause", timers };
   chrome.tabs.query({}, (tabs) =>
-    tabs.forEach((tab) => chrome.tabs.sendMessage(tab.id, message))
+    tabs.forEach((tab) => sendStop({ tabId: tab.id, timers }))
   );
 
   saveToStorage({
@@ -91,10 +81,30 @@ const pause = async () => {
     lastActivation: Date.now(),
   });
 };
+
 const reset = () => {};
+// end controls
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action === "start") start();
   if (request.action === "pause") pause();
   if (request.action === "reset") reset();
+});
+
+const onTabUpdated = async (tabId) => {
+  const timers = getUpdatedTimers(await getTimersData());
+  saveToStorage({ timers, lastActivation: Date.now() });
+  sendStart({ tabId, timers });
+};
+
+chrome.tabs.onActivated.addListener(async function ({ tabId, windowId }) {
+  // check if paused
+  onTabUpdated(tabId);
+});
+
+chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
+  // check if paused
+  if (changeInfo.status === "complete") {
+    onTabUpdated(tabId);
+  }
 });
