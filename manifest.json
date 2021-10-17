@@ -1,0 +1,25 @@
+{
+  "name": "Session Timer",
+  "description": "Track your usage time per chrome tab.",
+  "version": "1.0",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"],
+      "css": ["timer.css"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["timer.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
