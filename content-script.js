@@ -1,3 +1,4 @@
+let stopped;
 let timers;
 let backgroundMessageReceived = false;
 let htmlInjectionFinshed = false;
@@ -22,7 +23,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
 // format time in milliseconds to hh:mm:ss
 const formatTime = (time, maxTime) => {
-  console.log(time, maxTime, maxTime > 1000 * 60);
   const h = Math.floor(time / (1000 * 60 * 60));
   const m = Math.floor((time % (1000 * 60 * 60)) / (1000 * 60));
   const s = Math.floor((time % (1000 * 60)) / 1000);
@@ -44,6 +44,7 @@ const formatTime = (time, maxTime) => {
 
 const renderTimers = () => {
   const timerContainer = document.getElementById("timer-content");
+  if (!timerContainer) return;
   timerContainer.innerHTML = "";
 
   const table = document.createElement("table");
@@ -96,12 +97,41 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   renderTimers();
 });
 
-fetch(chrome.runtime.getURL("timer.html"))
-  .then((r) => r.text())
-  .then((html) => {
-    document.body.insertAdjacentHTML("afterbegin", html);
-  })
-  .then(() => {
-    htmlInjectionFinshed = true;
-    startTimer();
+const init = () => {
+  chrome.storage.local.get("currentStatus", (result) => {
+    stopped = result.currentStatus === "stopped";
+    main();
   });
+};
+const hide = () => {
+  document.getElementById("session-timer-container").style.display = "none";
+  console.log("hide");
+};
+const show = () => {
+  document.getElementById("session-timer-container").style.display = "block";
+  console.log("show");
+};
+
+const main = () => {
+  fetch(chrome.runtime.getURL("timer.html"))
+    .then((r) => r.text())
+    .then((html) => {
+      document.body.insertAdjacentHTML("afterbegin", html);
+      // if stopped get #session-timer-container and hide it
+      if (stopped) {
+        hide();
+      }
+    })
+    .then(() => {
+      htmlInjectionFinshed = true;
+      startTimer();
+    });
+};
+
+init();
+
+chrome.storage.onChanged.addListener(function (changes, namespace) {
+  if (!("currentStatus" in changes)) return;
+  if (changes.currentStatus.newValue === "stopped") hide();
+  if (changes.currentStatus.newValue !== "stopped") show();
+});

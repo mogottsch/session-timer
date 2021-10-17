@@ -11,28 +11,37 @@ const main = () => {
   const startButton = document.getElementById("start");
   const pauseButton = document.getElementById("pause");
   const resetButton = document.getElementById("reset");
+  const stopButton = document.getElementById("stop");
 
   const setButtonVisibility = (currentStatus) => {
     startButton.style.display = currentStatus === "running" ? "none" : "block";
-    pauseButton.style.display = currentStatus === "paused" ? "none" : "block";
+    pauseButton.style.display =
+      currentStatus === "paused" || currentStatus === "stopped"
+        ? "none"
+        : "block";
   };
 
   setButtonVisibility(currentStatus);
+  const updateStatus = (status) => {
+    currentStatus = status;
+    setButtonVisibility(currentStatus);
+  };
 
   startButton.onclick = () => {
     chrome.runtime.sendMessage({ action: "start" });
-    currentStatus = "running";
-    setButtonVisibility(currentStatus);
+    updateStatus("running");
   };
   pauseButton.onclick = () => {
     chrome.runtime.sendMessage({ action: "pause" });
-    currentStatus = "paused";
-    setButtonVisibility(currentStatus);
+    updateStatus("paused");
   };
   resetButton.onclick = () => {
     chrome.runtime.sendMessage({ action: "reset" });
-    currentStatus = "paused";
-    setButtonVisibility(currentStatus);
+    updateStatus("paused");
+  };
+  stopButton.onclick = () => {
+    chrome.runtime.sendMessage({ action: "stop" });
+    updateStatus("stopped");
   };
 };
 

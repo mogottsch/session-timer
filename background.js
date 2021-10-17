@@ -109,17 +109,29 @@ const reset = () => {
   });
   pauseAllTabs({});
 };
+
+const stop = async () => {
+  saveToStorage({
+    currentStatus: "stopped",
+    timers: {},
+  });
+  pauseAllTabs({});
+};
 // end controls
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action === "start") start();
   if (request.action === "pause") pause();
   if (request.action === "reset") reset();
+  if (request.action === "stop") stop();
 });
 
 const onTabUpdated = async (tabId) => {
   const timers = getUpdatedTimers(await getTimersData());
-  if (await isPaused()) return;
+  if (await isPaused()) {
+    pauseAllTabs(timers);
+    return;
+  }
 
   saveToStorage({ timers, lastActivation: Date.now() });
   sendStart({ tabId, timers });
