@@ -1,4 +1,3 @@
-const timers = {};
 let activeTimer;
 let lastActivation = new Date();
 
@@ -14,18 +13,39 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   }
 });
 
-const sendTimers = (tabId) => {
+const sendTimers = async (tabId) => {
+  const timers = (await getFromStorageSync("timers"))["timers"] ?? {};
   chrome.tabs.sendMessage(tabId, { timers }, function (response) {
     if (!response?.host) return;
-    if (!(response.host in timers)) timers[response.host] = 0;
     activeTimer = response.host;
   });
 };
 
-const updateTimers = () => {
+const updateTimers = async () => {
   if (!activeTimer) return;
+
+  const storageResponse = await getFromStorageSync([
+    "timers",
+    "lastActivation",
+  ]);
+  console.log(storageResponse);
+  const lastActivation = storageResponse["lastActivation"]
+    ? new Date(storageResponse["lastActivation"])
+    : new Date();
+  const timers = storageResponse["timers"] ?? {};
+
   const now = new Date();
   const diff = now - lastActivation;
-  timers[activeTimer] += diff;
-  lastActivation = now;
+  timers[activeTimer] = (timers[activeTimer] ?? 0) + diff;
+
+  chrome.storage.local.set({ timers, lastActivation: Date.now() });
+  console.log({ toSave: timers });
+};
+
+const getFromStorageSync = (key) => {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(key, (result) => {
+      resolve(result);
+    });
+  });
 };
