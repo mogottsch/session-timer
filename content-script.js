@@ -4,6 +4,7 @@ let htmlInjectionFinshed = false;
 let interval;
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.action !== "start") return;
   timers = request.timers;
   const host = window.location.host;
   if (!(host in timers)) timers[host] = 0;
@@ -56,10 +57,15 @@ const startTimer = () => {
   interval = setInterval(updateTimer, 1000);
 };
 
-document.addEventListener(
-  "visibilitychange",
-  () => (timerElement.innerText = "-")
-);
+const stopTimer = () => {
+  if (interval) clearInterval(interval);
+  interval = null;
+};
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  console.log(request);
+  if (request.action == "pause") stopTimer();
+});
 
 fetch(chrome.runtime.getURL("timer.html"))
   .then((r) => r.text())

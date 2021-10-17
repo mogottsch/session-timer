@@ -1,0 +1,13 @@
+button {
+  outline: none;
+  margin: 10px;
+  border: none;
+  border-radius: 2px;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
