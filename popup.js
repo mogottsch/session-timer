@@ -1,7 +1,11 @@
-let currentStatus = chrome.storage.local.get(
-  "currentStatus",
-  (result) => (currentStatus = result.currentStatus)
-);
+let currentStatus;
+
+const initBackgroundVars = () => {
+  currentStatus = chrome.storage.local.get("currentStatus", (result) => {
+    currentStatus = result.currentStatus;
+    main();
+  });
+};
 
 const main = () => {
   const startButton = document.getElementById("start");
@@ -28,4 +32,4 @@ const main = () => {
   resetButton.onclick = () => chrome.runtime.sendMessage({ action: "reset" });
 };
 
-window.addEventListener("DOMContentLoaded", main);
+window.addEventListener("DOMContentLoaded", initBackgroundVars);
