@@ -1,6 +1,6 @@
 let currentStatus = chrome.storage.local.get(
-  "status",
-  (result) => (currentStatus = result.status)
+  "currentStatus",
+  (result) => (currentStatus = result.currentStatus)
 );
 
 const main = () => {
