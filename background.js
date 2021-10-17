@@ -127,11 +127,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 const onTabUpdated = async (tabId) => {
-  const timers = getUpdatedTimers(await getTimersData());
+  const timersData = await getTimersData();
   if (await isPaused()) {
-    pauseAllTabs(timers);
+    pauseAllTabs(timersData.timers);
     return;
   }
+  const timers = getUpdatedTimers(timersData);
 
   saveToStorage({ timers, lastActivation: Date.now() });
   sendStart({ tabId, timers });
