@@ -2,22 +2,25 @@ let timers;
 let backgroundMessageReceived = false;
 let htmlInjectionFinshed = false;
 let interval;
+let timerElement;
+const currentHost = window.location.host;
+
+const onStart = () => {
+  timers = request.timers;
+  if (!(currentHost in timers)) timers[currentHost] = 0;
+
+  backgroundMessageReceived = true;
+  startTimer(timers);
+
+  sendResponse({ currentHost });
+};
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action !== "start") return;
-  timers = request.timers;
-  const host = window.location.host;
-  if (!(host in timers)) timers[host] = 0;
-
-  backgroundMessageReceived = true;
-  startTimer();
-
-  sendResponse({ host });
+  onStart();
 });
 
-let timerElement;
-
-const renderTimers = () => {
+const renderTimers = (timers) => {
   const timerContainer = document.getElementById("timer-content");
   timerContainer.innerHTML = "";
 
@@ -35,7 +38,7 @@ const renderTimers = () => {
 
     table.appendChild(row);
 
-    if (host == window.location.host) {
+    if (host == currentHost) {
       timerElement = timeCell;
       row.classList.add("current");
       timerElement.classList.add("current-timer");
@@ -43,17 +46,18 @@ const renderTimers = () => {
   }
   timerContainer.appendChild(table);
 };
-const updateTimer = () => {
-  timers[window.location.host] += 1000;
 
-  const formattedTime = Math.round(timers[window.location.host] / 1000);
+const updateTimer = () => {
+  timers[currentHost] += 1000;
+
+  const formattedTime = Math.round(timers[currentHost] / 1000);
   timerElement.innerText = formattedTime;
 };
 
-const startTimer = () => {
+const startTimer = (timers) => {
   if (!backgroundMessageReceived || !htmlInjectionFinshed) return;
   if (interval) clearInterval(interval);
-  renderTimers();
+  renderTimers(timers);
   interval = setInterval(updateTimer, 1000);
 };
 
