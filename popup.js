@@ -29,7 +29,11 @@ const main = () => {
     currentStatus = "paused";
     setButtonVisibility(currentStatus);
   };
-  resetButton.onclick = () => chrome.runtime.sendMessage({ action: "reset" });
+  resetButton.onclick = () => {
+    chrome.runtime.sendMessage({ action: "reset" });
+    currentStatus = "paused";
+    setButtonVisibility(currentStatus);
+  };
 };
 
 window.addEventListener("DOMContentLoaded", initBackgroundVars);

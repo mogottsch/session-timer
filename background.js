@@ -87,9 +87,7 @@ const pause = async () => {
   if (currentStatus === "paused") return;
   const timers = getUpdatedTimers(await getTimersData());
 
-  chrome.tabs.query({}, (tabs) =>
-    tabs.forEach((tab) => sendPause({ tabId: tab.id, timers }))
-  );
+  pauseAllTabs(timers);
 
   await saveToStorage({
     currentStatus: "paused",
@@ -98,7 +96,19 @@ const pause = async () => {
   });
 };
 
-const reset = () => {};
+const pauseAllTabs = (timers) => {
+  chrome.tabs.query({}, (tabs) =>
+    tabs.forEach((tab) => sendPause({ tabId: tab.id, timers }))
+  );
+};
+
+const reset = () => {
+  saveToStorage({
+    currentStatus: "paused",
+    timers: {},
+  });
+  pauseAllTabs({});
+};
 // end controls
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
