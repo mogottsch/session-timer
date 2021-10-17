@@ -68,6 +68,8 @@ const stopTimer = () => {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.action == "pause") stopTimer();
+  timers = request.timers;
+  renderTimers();
 });
 
 fetch(chrome.runtime.getURL("timer.html"))

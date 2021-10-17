@@ -16,7 +16,6 @@ const main = () => {
   setButtonVisibility(currentStatus);
 
   startButton.onclick = () => {
-    console.log("start");
     chrome.runtime.sendMessage({ action: "start" });
     currentStatus = "running";
     setButtonVisibility(currentStatus);
