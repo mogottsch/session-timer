@@ -8,7 +8,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   const host = window.location.host;
   if (!(host in timers)) timers[host] = 0;
 
-  console.log("background message received");
   backgroundMessageReceived = true;
   startTimer();
 
@@ -68,7 +67,6 @@ fetch(chrome.runtime.getURL("timer.html"))
     document.body.insertAdjacentHTML("afterbegin", html);
   })
   .then(() => {
-    console.log("html injection finished");
     htmlInjectionFinshed = true;
     startTimer();
   });

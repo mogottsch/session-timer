@@ -1,6 +1,6 @@
 const timers = {};
 let activeTimer;
-let lastActivation;
+let lastActivation = new Date();
 
 chrome.tabs.onActivated.addListener(function ({ tabId, windowId }) {
   updateTimers();
@@ -19,11 +19,11 @@ const sendTimers = (tabId) => {
     if (!response?.host) return;
     if (!(response.host in timers)) timers[response.host] = 0;
     activeTimer = response.host;
-    console.log(timers);
   });
 };
 
 const updateTimers = () => {
+  if (!activeTimer) return;
   const now = new Date();
   const diff = now - lastActivation;
   timers[activeTimer] += diff;
