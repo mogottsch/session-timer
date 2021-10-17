@@ -25,7 +25,8 @@ const renderTimers = () => {
   timerContainer.innerHTML = "";
 
   const table = document.createElement("table");
-  for (const host in timers) {
+  const hosts = Object.keys(timers).sort();
+  for (const host of hosts) {
     const row = document.createElement("tr");
 
     const hostCell = document.createElement("td");
