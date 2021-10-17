@@ -12,7 +12,7 @@ const onStart = (request, sendResponse) => {
   backgroundMessageReceived = true;
   startTimer(timers);
 
-  sendResponse({ currentHost });
+  sendResponse({ host: currentHost });
 };
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {

@@ -2,7 +2,6 @@
 const sendStart = async ({ tabId, timers }) => {
   chrome.tabs.sendMessage(tabId, { timers, action: "start" }, (response) => {
     if (!response?.host) return;
-    console.log(response.host);
     saveToStorage({ activeTimer: response.host });
   });
 };
@@ -58,17 +57,20 @@ const getTimersData = async () =>
 
 //controls
 const start = async () => {
+  const status = await getFromStorage("status")["status"];
+  if (!status === "running") return;
   const currentTab = await getCurrentTab();
-  console.log(currentTab);
   saveToStorage({
     lastActivation: Date.now(),
-    paused: false,
+    status: "running",
   });
   const { timers } = await getTimersData();
   sendStart({ tabId: currentTab.id, timers });
 };
 
 const pause = async () => {
+  const status = await getFromStorage("status")["status"];
+  if (!status === "paused") return;
   const timers = getUpdatedTimers(await getTimersData());
 
   chrome.tabs.query({}, (tabs) =>
@@ -76,7 +78,7 @@ const pause = async () => {
   );
 
   saveToStorage({
-    paused: true,
+    status: "paused",
     timers,
     lastActivation: Date.now(),
   });
